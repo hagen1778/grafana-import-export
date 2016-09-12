@@ -1,6 +1,7 @@
 # grafana-import-export
 
 Simple scripts to export from, and import dashboards to [Grafana](http://grafana.org/)
+
 Example was taken from https://gist.github.com/crisidev/bd52bdcc7f029be2f295 
 
 ## Dependencies
