@@ -5,7 +5,7 @@ FILE_DIR=path/to/dashboards
 
 import_dashboard(){
 	printf "Processing $1 file...\n"
-	curl -XPOST "${HOST}/api/dashboards/db" --data-binary @./$1 \
+	curl -k -XPOST "${HOST}/api/dashboards/db" --data-binary @./$1 \
 			-H "Content-Type: application/json" -H "Accept: application/json" -H "Authorization: Bearer ${KEY}"
 	printf "\n"
 }
