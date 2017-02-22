@@ -1,29 +1,53 @@
 #!/usr/bin/env bash
-KEY=xxxxxxxxxx
-HOST="http://your.grafana.host.com"
+ORGS=(
+"org1:xxxxxxxxxx"
+"org2:xxxxxxxxxx")
+HOST="http://your.grafana.host"
 FILE_DIR=path/to/dashboards
 
 import_dashboard(){
-	printf "Processing $1 file...\n"
-	curl -k -XPOST "${HOST}/api/dashboards/db" --data-binary @./$1 \
-			-H "Content-Type: application/json" -H "Accept: application/json" -H "Authorization: Bearer ${KEY}"
-	printf "\n"
+	if [ -f "$1" ]
+	then
+		printf "Processing $1 file...\n"
+		curl -k -XPOST "${HOST}/api/dashboards/db" --data-binary @./$1 -H "Content-Type: application/json" -H "Accept: application/json" -H "Authorization: Bearer $2"
+		printf "\n"
+	else
+		echo "$file not found."
+	fi
 }
 
 if [[ -n "$1" ]]
 	then
-		for file in "$@"; do
-			file="$FILE_DIR/$file"
-			if [ -f "$file" ]
+		for f in "$@"; do
+			ARGORG=${f%%/*}
+			if [ -d "$FILE_DIR/$ARGORG" ]
 			then
-				import_dashboard "$file"
+				for row in "${ORGS[@]}" ; do
+					ORG=${row%%:*}
+					if [ $ARGORG == $ORG ]
+					then
+						KEY=${row#*:}
+						DASH=${f#*/}
+
+						for file in $FILE_DIR/$ORG/$DASH; do
+							import_dashboard $file $KEY
+						done
+					fi
+				done
 			else
-				echo "$file not found."
+				echo "$FILE_DIR/$ARGORG does not exist."
 			fi
 		done
     else
     	echo "Importing all"
-    	for file in $FILE_DIR/*.json; do
-			import_dashboard "$file"
+    	for row in "${ORGS[@]}" ; do
+			ORG=${row%%:*}
+			KEY=${row#*:}
+			DIR="$FILE_DIR/$ORG"
+
+			for file in $DIR/*.json; do
+				import_dashboard $file $KEY
+			done
 		done
+
 fi

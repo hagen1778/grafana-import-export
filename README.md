@@ -1,6 +1,7 @@
 # grafana-import-export
 
 Simple scripts to export from, and import dashboards to [Grafana](http://grafana.org/)
+Support organizations.
 
 Example was taken from https://gist.github.com/crisidev/bd52bdcc7f029be2f295 
 
@@ -8,7 +9,7 @@ Example was taken from https://gist.github.com/crisidev/bd52bdcc7f029be2f295
 **[JQ](https://stedolan.github.io/jq/)** - to process .json
 
 ## dashboard-exporter
-To make it work, you need to replace **KEY**, **HOST** and **FILE_DIR** variables with your own
+To make it work, you need to replace **HOST** and **FILE_DIR** variables with your own. And fill **ORGS** array with pairs ORGANIZATION:API_KEY
 
 Do not forget to set permissions before run
 ```
@@ -32,7 +33,7 @@ Expected output:
 Look for exported .json dashboards at **FILE_DIR** path
 
 ## dashboard-importer
-To make it work, you need to replace **KEY**, **HOST** and **FILE_DIR** variables with your own
+To make it work, you need to replace **HOST** and **FILE_DIR** variables with your own. And fill **ORGS** array with pairs ORGANIZATION:API_KEY
 
 Do not forget to set permissions before run
 ```
@@ -46,5 +47,10 @@ To import all .json files from **FILE_DIR** to your Grafana:
 
 To import only some of them:
 ```
-./dashboard-importer.sh dashboard1.json dashboard2.json
+./dashboard-importer.sh organization/dashboard1.json organization/dashboard2.json
+```
+
+To import all for organization:
+```
+./dashboard-importer.sh organization/*.json
 ```
