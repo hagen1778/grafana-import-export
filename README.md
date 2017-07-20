@@ -1,6 +1,6 @@
 # grafana-import-export
 
-Simple scripts to export from, and import dashboards to [Grafana](http://grafana.org/)
+Simple scripts for import/export dashboards and datasource to [Grafana](http://grafana.org/)
 Support organizations.
 
 Example was taken from https://gist.github.com/crisidev/bd52bdcc7f029be2f295 
@@ -8,12 +8,12 @@ Example was taken from https://gist.github.com/crisidev/bd52bdcc7f029be2f295
 ## Dependencies
 **[JQ](https://stedolan.github.io/jq/)** - to process .json
 
-## dashboard-exporter
+## exporter
 To make it work, you need to replace **HOST** and **FILE_DIR** variables with your own. And fill **ORGS** array with pairs ORGANIZATION:API_KEY
 
 Do not forget to set permissions before run
 ```
-chmod 755 dashboard-exporter.sh
+chmod 755 exporter.sh
 ```
 
 Then run:
@@ -23,34 +23,34 @@ Then run:
 
 Expected output:
 ```
-./dashboard-exporter.sh
+./exporter.sh
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100 21102    0 21102    0     0  53000      0 --:--:-- --:--:-- --:--:-- 53020
 
 ```
 
-Look for exported .json dashboards at **FILE_DIR** path
+Look for exported .json dashboards and datasources at **FILE_DIR** path
 
-## dashboard-importer
+## importer
 To make it work, you need to replace **HOST** and **FILE_DIR** variables with your own. And fill **ORGS** array with pairs ORGANIZATION:API_KEY
 
 Do not forget to set permissions before run
 ```
-chmod 755 dashboard-importer.sh
+chmod 755 importer.sh
 ```
 
 To import all .json files from **FILE_DIR** to your Grafana:
 ```
-./dashboard-importer.sh
+./importer.sh
 ```
 
 To import only some of them:
 ```
-./dashboard-importer.sh organization/dashboard1.json organization/dashboard2.json
+./importer.sh organization/dashboards/dashboard.json organization/datasources/datasource.json
 ```
 
 To import all for organization:
 ```
-./dashboard-importer.sh organization/*.json
+./importer.sh organization/dashboards/*.json organization/datasources/*.json
 ```
