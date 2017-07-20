@@ -1,6 +1,6 @@
 # grafana-import-export
 
-Simple scripts for import/export dashboards and datasource to [Grafana](http://grafana.org/)
+Simple scripts for import/export dashboards and datasources to [Grafana](http://grafana.org/)
 Support organizations.
 
 Example was taken from https://gist.github.com/crisidev/bd52bdcc7f029be2f295 
@@ -18,7 +18,7 @@ chmod 755 exporter.sh
 
 Then run:
 ```
-./dashboard-exporter.sh
+./exporter.sh
 ```
 
 Expected output:
