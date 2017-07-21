@@ -1,6 +1,7 @@
 # grafana-import-export
 
 Simple scripts for import/export dashboards and datasources to [Grafana](http://grafana.org/)
+
 Support organizations.
 
 Example was taken from https://gist.github.com/crisidev/bd52bdcc7f029be2f295 
