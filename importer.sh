@@ -45,8 +45,6 @@ if [[ -n "$1" ]]
 							    import_file $file $KEY 'datasources'
 							fi
 						done
-					else
-					    echo "No such organization $ARGORG"
 					fi
 				done
 			else
