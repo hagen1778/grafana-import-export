@@ -33,7 +33,7 @@ for row in "${ORGS[@]}" ; do
     for dash in $(fetch_fields $KEY 'search?query=&' 'uri'); do
         DB=$(echo ${dash}|sed 's,db/,,g').json
         echo $DB
-    	curl -f -k -H "Authorization: Bearer ${KEY}" "${HOST}/api/dashboards/${dash}" | jq '.dashboard.id = null' > "$DIR/dashboards/$DB"
+    	curl -f -k -H "Authorization: Bearer ${KEY}" "${HOST}/api/dashboards/${dash}" | jq '.dashboard.id = null' | jq '.overwrite = true' > "$DIR/dashboards/$DB"
     done
 
 	for id in $(fetch_fields $KEY 'datasources' 'id'); do
