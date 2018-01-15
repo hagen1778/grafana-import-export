@@ -2,29 +2,16 @@
 . "$(dirname "$0")/config.sh"
 
 fetch_fields() {
-    echo $(curl -sSL -f -k -H "Authorization: Bearer ${1}" "${HOST}/api/${2}" | jq -r "if type==\"array\" then .[] else . end| .${3}")
+    curl -sSL -f -k -H "Authorization: Bearer ${1}" "${HOST}/api/${2}" | jq -r "if type==\"array\" then .[] else . end| .${3}"
 }
-
-if [ ! -d "$FILE_DIR" ] ; then
-    mkdir -p "$FILE_DIR"
-fi
 
 for row in "${ORGS[@]}" ; do
     ORG=${row%%:*}
     KEY=${row#*:}
     DIR="$FILE_DIR/$ORG"
 
-    if [ ! -d "$DIR" ] ; then
-        mkdir -p "$DIR"
-    fi
-
-    if [ ! -d "$DIR/dashboards" ] ; then
-        mkdir -p "$DIR/dashboards"
-    fi
-
-    if [ ! -d "$DIR/datasources" ] ; then
-        mkdir -p "$DIR/datasources"
-    fi
+    mkdir -p "$DIR/dashboards"
+    mkdir -p "$DIR/datasources"
 
     for dash in $(fetch_fields $KEY 'search?query=&' 'uri'); do
         DB=$(echo ${dash}|sed 's,db/,,g').json
@@ -37,5 +24,4 @@ for row in "${ORGS[@]}" ; do
         echo $DS
         curl -f -k -H "Authorization: Bearer ${KEY}" "${HOST}/api/datasources/${id}" | jq '.id = null' | jq '.orgId = null' > "$DIR/datasources/$DS"
     done
-
 done

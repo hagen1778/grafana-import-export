@@ -8,9 +8,9 @@ import_file(){
         return
     fi
 
-    printf "Processing $1 file...\n"
+    echo "Processing $1 file..."
     curl -k -XPOST "${HOST}/api/$3" --data-binary @./$1 -H "Content-Type: application/json" -H "Accept: application/json" -H "Authorization: Bearer $2"
-    printf "\n"
+    echo
 }
 
 if [[ -n "$1" ]]; then
