@@ -31,9 +31,9 @@ if [[ -n "$1" ]]; then
 
                     for file in $FILE_DIR/$ORG/$TYPE/$FILE; do
                         if [ $TYPE == 'dashboards' ]; then
-                            import_file $file $KEY 'dashboards/db'
+                            import_file $file "$KEY" 'dashboards/db'
                         else
-                            import_file $file $KEY 'datasources'
+                            import_file $file "$KEY" 'datasources'
                         fi
                     done
                 fi
@@ -51,12 +51,12 @@ else
 
         printf "Datasources..."
         for file in $DIR/datasources/*.json; do
-            import_file $file $KEY 'datasources'
+            import_file $file "$KEY" 'datasources'
         done
 
         printf "Dashboards..."
         for file in $DIR/dashboards/*.json; do
-            import_file $file $KEY 'dashboards/db'
+            import_file $file "$KEY" 'dashboards/db'
         done
     done
 fi
