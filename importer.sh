@@ -9,7 +9,7 @@ import_file(){
     fi
 
     echo "Processing $1 file..."
-    curl -k -XPOST "${HOST}/api/$3" --data-binary @./$1 -H "Content-Type: application/json" -H "Accept: application/json" -H "Authorization: Bearer $2"
+    curl -k -XPOST "${HOST}/api/$3" --data-binary @$1 -H "Content-Type: application/json" -H "Accept: application/json" -H "Authorization: Bearer $2"
     echo
 }
 
