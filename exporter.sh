@@ -12,6 +12,7 @@ for row in "${ORGS[@]}" ; do
 
     mkdir -p "$DIR/dashboards"
     mkdir -p "$DIR/datasources"
+    mkdir -p "$DIR/alert-notifications"
 
     for dash in $(fetch_fields $KEY 'search?query=&' 'uri'); do
         DB=$(echo ${dash}|sed 's,db/,,g').json
@@ -23,5 +24,11 @@ for row in "${ORGS[@]}" ; do
         DS=$(echo $(fetch_fields $KEY "datasources/${id}" 'name')|sed 's/ /-/g').json
         echo $DS
         curl -f -k -H "Authorization: Bearer ${KEY}" "${HOST}/api/datasources/${id}" | jq '.id = null' | jq '.orgId = null' > "$DIR/datasources/$DS"
+    done
+
+    for id in $(fetch_fields $KEY 'alert-notifications' 'id'); do
+        FILENAME=${id}.json
+        echo $FILENAME
+        curl -f -k -H "Authorization: Bearer ${KEY}" "${HOST}/api/alert-notifications/${id}" > "$DIR/alert-notifications/$FILENAME"
     done
 done

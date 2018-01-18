@@ -43,18 +43,29 @@ if [[ -n "$1" ]]; then
         fi
     done
 else
-    printf "Importing all"
+    echo "Importing all"
     for row in "${ORGS[@]}" ; do
         ORG=${row%%:*}
         KEY=${row#*:}
         DIR="$FILE_DIR/$ORG"
 
-        printf "Datasources..."
+        echo "Datasources..."
         for file in $DIR/datasources/*.json; do
             import_file $file "$KEY" 'datasources'
         done
 
-        printf "Dashboards..."
+        echo "Alert notifications"
+        for file in $DIR/alert-notifications/*.json; do
+            id=$(basename $file .json)
+
+            # import_file uses POST, we need PUT here
+            # Only updating existing alert notifications is supported for now
+            echo "Processing ${file} file..."
+            curl -k -XPUT "${HOST}/api/alert-notifications/${id}" --data-binary @$file -H "Content-Type: application/json" -H "Accept: application/json" -H "Authorization: Bearer ${KEY}"
+            echo
+        done
+
+        echo "Dashboards..."
         for file in $DIR/dashboards/*.json; do
             import_file $file "$KEY" 'dashboards/db'
         done
