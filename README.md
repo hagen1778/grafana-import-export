@@ -1,6 +1,6 @@
 # grafana-import-export
 
-Simple scripts for import/export dashboards and datasources to [Grafana](http://grafana.org/)
+Simple scripts for import/export dashboards, datasources and alerts to [Grafana](http://grafana.org/)
 
 Support organizations.
 
@@ -9,10 +9,12 @@ Example was taken from https://gist.github.com/crisidev/bd52bdcc7f029be2f295
 ## Dependencies
 **[JQ](https://stedolan.github.io/jq/)** - to process .json
 
-## exporter
-To make it work, you need to replace **HOST** and **FILE_DIR** variables with your own. And fill **ORGS** array with pairs ORGANIZATION:API_KEY
+## Configuration
+Replace **HOST** and **FILE_DIR** variables at `config.sh` with your own.
+Also fill **ORGS** array with pairs ORGANIZATION:API_KEY.
 
-Then run:
+## exporter
+Run:
 ```
 ./exporter.sh
 ```
@@ -29,13 +31,6 @@ Expected output:
 Look for exported .json dashboards and datasources at **FILE_DIR** path
 
 ## importer
-To make it work, you need to replace **HOST** and **FILE_DIR** variables with your own. And fill **ORGS** array with pairs ORGANIZATION:API_KEY
-
-Do not forget to set permissions before run
-```
-chmod 755 importer.sh
-```
-
 To import all .json files from **FILE_DIR** to your Grafana:
 ```
 ./importer.sh
