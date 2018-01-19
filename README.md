@@ -12,11 +12,6 @@ Example was taken from https://gist.github.com/crisidev/bd52bdcc7f029be2f295
 ## exporter
 To make it work, you need to replace **HOST** and **FILE_DIR** variables with your own. And fill **ORGS** array with pairs ORGANIZATION:API_KEY
 
-Do not forget to set permissions before run
-```
-chmod 755 exporter.sh
-```
-
 Then run:
 ```
 ./exporter.sh
