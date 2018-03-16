@@ -23,7 +23,7 @@ for row in "${ORGS[@]}" ; do
     for id in $(fetch_fields $KEY 'datasources' 'id'); do
         DS=$(echo $(fetch_fields $KEY "datasources/${id}" 'name')|sed 's/ /-/g').json
         echo $DS
-        curl -f -k -H "Authorization: Bearer ${KEY}" "${HOST}/api/datasources/${id}" | jq '.id = null' | jq '.orgId = null' > "$DIR/datasources/$DS"
+        curl -f -k -H "Authorization: Bearer ${KEY}" "${HOST}/api/datasources/${id}" | jq '.id = null' | jq '.orgId = null' > "$DIR/datasources/${id}.json"
     done
 
     for id in $(fetch_fields $KEY 'alert-notifications' 'id'); do
