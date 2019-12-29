@@ -44,71 +44,76 @@ function grafanaApiCall() {
 
 function exportDashboardsAndFolders() {
 	$grafana_dashboards_api_url = "${grafana_home_url}/api/search"
-	
 	Write-Host "Exporting dashborads from: $grafana_home_url"
-
-	Write-Host "Querying.."
-	
+	Write-Host "Querying for dashboards and folders"
 	$dashboards = grafanaApiCall "$grafana_home_url" "search" "$api_key"
 	
-	Write-Host "Found $($dashboards.count) dashboards"
+	Write-Host "Found $($dashboards.count) dashboards" -ForegroundColor Cyan
 
-	Write-Host "Creating exported dashboards and folders dirs next to this script at: $scriptPath"
-	New-Item -ItemType Directory -Path "$scriptPath\exported_dashboards" -Force
-	New-Item -ItemType Directory -Path "$scriptPath\exported_folders" -Force
+	Write-Host "Creating dirs: exported_dashboards, exported_folders"
+	New-Item -ItemType Directory -Path "$scriptPath\exported_dashboards" -Force | Out-Null
+	New-Item -ItemType Directory -Path "$scriptPath\exported_folders" -Force | Out-Null
+	Write-Host ""
 
 	foreach ($dash in $dashboards) {
-		Write-Host "Exporting: $($dash.title)"
-		$dash_url = "${grafana_home_url}/api/dashboards/uid/$($dash.uid)"
-		
-		$dash_Content = grafanaApiCall "$grafana_home_url" "dashboards/uid/$($dash.uid)" "$api_key"
+		try {
+			$dash_url = "${grafana_home_url}/api/dashboards/uid/$($dash.uid)"
+			
+			$dash_Content = grafanaApiCall "$grafana_home_url" "dashboards/uid/$($dash.uid)" "$api_key"
 
-		$dash_title = $dash_Content.dashboard.title
-		$dash_Content.dashboard.id = $null   # When importing always assign $null to the dashboard.id field
-		$dash_Content.dashboard.uid = $null  # When importing if setting dashboard.uid field to $null it will create a new dashboard. But will overwrite an existing dashboard otherwise
-		$dash_Content.dashboard.version = 1  # Reset dashboard version
-		$dash_Content.meta.version = 1
+			$dash_title = $dash_Content.dashboard.title
+			$dash_Content.dashboard.id = $null   # When importing always assign $null to the dashboard.id field
+			$dash_Content.dashboard.uid = $null  # When importing if setting dashboard.uid field to $null it will create a new dashboard. But will overwrite an existing dashboard otherwise
+			$dash_Content.dashboard.version = 1  # Reset dashboard version
+			$dash_Content.meta.version = 1
 
-		Write-Host "Saving exported: $dash_title"
-		if ($dash_Content.meta.isFolder) {$dash_Content | ConvertTo-Json | Out-File "$scriptPath\exported_folders\$dash_title.json"}
-		else {$dash_Content | ConvertTo-Json | Out-File "$scriptPath\exported_dashboards\$dash_title.json"}
-
-		Write-Host "`n"
-
+			Write-Host -NoNewLine "Exporting: "
+			Write-Host "$dash_title " -ForegroundColor Yellow
+			if ($dash_Content.meta.isFolder) {$dash_Content | ConvertTo-Json | Out-File "$scriptPath\exported_folders\$dash_title.json"}
+			else {$dash_Content | ConvertTo-Json | Out-File "$scriptPath\exported_dashboards\$dash_title.json"}
+			
+			Write-Host "Success" -ForegroundColor Green
+		} catch {
+			Write-Host $_
+			Write-Host "Failed to export $dash" -ForegroundColor Red
+		}
 	}
+	Write-Host ""
 	
 }
 
 function exportDatasources() {
-	
 	Write-Host "Exporting datasources from: $grafana_home_url"
-	Write-Host "Querying.."
-	
+	Write-Host "Querying for datasources"
 	$datasources = grafanaApiCall "$grafana_home_url" "datasources" "$api_key"
 
-	Write-Host "Found $($datasources.count) datasources"
+	Write-Host "Found $($datasources.count) datasources" -ForegroundColor Cyan
 
-	Write-Host "Creating exported datasources dir next to this script at: $scriptPath"
-	New-Item -ItemType Directory -Path "$scriptPath\exported_datasources" -Force
-
+	Write-Host "Creating dir exported_datasources"
+	New-Item -ItemType Directory -Path "$scriptPath\exported_datasources" -Force | Out-Null
+	Write-Host ""
+	
 	foreach ($dataSrc in $datasources) {
-		Write-Host "Exporting: $($dataSrc.title)"
-		$dataSrc_url = "${grafana_home_url}/api/datasources/$($dataSrc.id)"
-		
-		$dataSrc_Content = grafanaApiCall "$grafana_home_url" "datasources/$($dataSrc.id)" "$api_key"
+		try {
+			$dataSrc_url = "${grafana_home_url}/api/datasources/$($dataSrc.id)"
+			
+			$dataSrc_Content = grafanaApiCall "$grafana_home_url" "datasources/$($dataSrc.id)" "$api_key"
 
-		$dataSrc_Name = $dataSrc_Content.name
-		$dataSrc_Content.id = $null   # When importing always assign $null to the datasource.id field
-
-		Write-Host "Saving exported: $dataSrc_Name"
-		$dataSrc_Content | ConvertTo-Json | Out-File "$scriptPath\exported_datasources\$dataSrc_Name.json"
-		Write-Host "`n"
-
+			$dataSrc_Name = $dataSrc_Content.name
+			$dataSrc_Content.id = $null   # When importing always assign $null to the datasource.id field
+			
+			Write-Host -NoNewLine "Exporting: "
+			Write-Host "$dataSrc_Name " -ForegroundColor Yellow
+			$dataSrc_Content | ConvertTo-Json | Out-File "$scriptPath\exported_datasources\$dataSrc_Name.json"
+			Write-Host "Success" -ForegroundColor Green
+		} catch {
+			Write-Host $_
+			Write-Host "Failed to export $dash" -ForegroundColor Red
+		}
 	}
+	Write-Host ""
 	
 }
-
-
 
 
 
