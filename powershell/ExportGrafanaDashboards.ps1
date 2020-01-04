@@ -2,14 +2,16 @@
 
 # Psrerequisites:
 #   Powershell v2 or higher
-#   Get API Key from Grafana at: Settings -> API Keys (A viewer-key will suffice only for dashboards and folders. An admin-key will be required for datasources)
+#   Grafana API Key: Settings -> API Keys (A viewer-key will suffice only for dashboards and folders. An admin-key will be required for datasources)
 
 # If using powershell v2: $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 $scriptPath = $PSScriptRoot
 
-$grafana_home_url = "http://13.90.250.12:3000"
-$api_key = "eyJrIjoiSzlEUUNvUG9kdGRvRWlFMXh2eWFuZ0VzV1NJNm0xaU0iLCJuIjoiZGFzaGJvYXJkc19leHBvcnRfaW1wb3J0X2FkbWluIiwiaWQiOjF9"
+$grafana_home_url = "http://ec2-3-16-187-253.us-east-2.compute.amazonaws.com:3000"
+$api_key = "eyJrIjoiOFhNUXVrdUcwMDRoOVpDcVdKMEduTWFnOGU5UEo5MGYiLCJuIjoiYWRtaW5fYXBpX2tleSIsImlkIjoxfQ=="
 
+# No need to touch
+$convertJsonDepth = 100
 
 function grafanaApiCall() {
 	Param(
@@ -27,7 +29,7 @@ function grafanaApiCall() {
 	
 	$grafanaFullUri = "$grafanaHost/api/$apiType"
 	try {
-		$resultData = Invoke-RestMethod -Uri $grafanaFullUri -Headers $headers -ContentType 'application/json'
+		$resultData = Invoke-RestMethod -Uri $grafanaFullUri -Method GET -Headers $headers -ContentType 'application/json'
 		
 		# Check for errors:
 		if (($resultData -eq $null) -or ($resultData -Like "*${grafana_api_error_msg}*")) {Read-Host "Failed querying grafana api at: $grafanaFullUri using defined 'api_key' in this script"; exit 1}
@@ -66,11 +68,12 @@ function exportDashboardsAndFolders() {
 			$dash_Content.dashboard.uid = $null  # When importing if setting dashboard.uid field to $null it will create a new dashboard. But will overwrite an existing dashboard otherwise
 			$dash_Content.dashboard.version = 1  # Reset dashboard version
 			$dash_Content.meta.version = 1
+			$dash_Content | Add-Member -Type NoteProperty -Name 'overwrite' -Value $true -Force
 
 			Write-Host -NoNewLine "Exporting: "
 			Write-Host "$dash_title " -ForegroundColor Yellow
 			if ($dash_Content.meta.isFolder) {$dash_Content | ConvertTo-Json | Out-File "$scriptPath\exported_folders\$dash_title.json"}
-			else {$dash_Content | ConvertTo-Json | Out-File "$scriptPath\exported_dashboards\$dash_title.json"}
+			else {$dash_Content | ConvertTo-Json -Depth $convertJsonDepth | Out-File "$scriptPath\exported_dashboards\$dash_title.json"}
 			
 			Write-Host "Success" -ForegroundColor Green
 		} catch {
