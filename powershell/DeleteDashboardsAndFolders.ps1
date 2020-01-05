@@ -106,7 +106,7 @@ function main() {
 	$dashboardsAndFolders = getDashboardsAndFolders
 	deleteDashboards $dashboardsAndFolders
 	deleteFolders $dashboardsAndFolders
-	Write-Host "Deleter Finished"
+	Write-Host "`nDeleter Finished"
 	Read-Host
 }
 

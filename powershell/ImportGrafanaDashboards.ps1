@@ -14,6 +14,9 @@ $datasourcesDir = "$scriptPath\exported_datasources"
 $grafana_home_url = "http://ec2-3-16-187-253.us-east-2.compute.amazonaws.com:3000"
 $api_key = "eyJrIjoiOFhNUXVrdUcwMDRoOVpDcVdKMEduTWFnOGU5UEo5MGYiLCJuIjoiYWRtaW5fYXBpX2tleSIsImlkIjoxfQ=="
 
+# Importing a folder that already exists gives this error
+$folderExistErrorMsg = "A folder or dashboard in the general folder with the same name already exists"
+
 # Show error for X seconds
 $failurePause_SleepSec = 5
 
@@ -47,6 +50,7 @@ function grafanaApiCall() {
 		return $resultData
 	} catch {
 		# Note that value__ is not a typo.
+		if ($_ -Like "*$folderExistErrorMsg*") {Write-Host "Already exists" -ForegroundColor Green; continue}
 		Write-Error $_
 		Write-Host "StatusCode: " $_.Exception.Response.StatusCode.value__ 
 		Write-Host "StatusDescription: " $_.Exception.Response.StatusDescription

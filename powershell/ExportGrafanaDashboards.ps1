@@ -29,7 +29,7 @@ function grafanaApiCall() {
 	
 	$grafanaFullUri = "$grafanaHost/api/$apiType"
 	try {
-		$resultData = Invoke-RestMethod -Uri $grafanaFullUri -Method GET -Headers $headers -ContentType 'application/json'
+		$resultData = Invoke-RestMethod -Uri $grafanaFullUri -Method GET -Headers $headers -ContentType 'application/json' -ErrorAction stop
 		
 		# Check for errors:
 		if (($resultData -eq $null) -or ($resultData -Like "*${grafana_api_error_msg}*")) {Read-Host "Failed querying grafana api at: $grafanaFullUri using defined 'api_key' in this script"; exit 1}
@@ -39,8 +39,48 @@ function grafanaApiCall() {
 		Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
 		Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
 		Read-Host "Exception Message:" $_.Exception.Message
+		
 		exit 1
 	}
+}
+
+
+function saveFolderJsonFile() {
+	Param(
+		[parameter(Mandatory=$true, Position=0)]
+		[Object []] $dash_Content
+    )
+	
+	$folderJsonFormat_Content =  @{
+		"title"= $dash_Content.dashboard.title
+		"uid" = $dash_Content.dashboard.uid
+		"id" = $null
+		"overwrite" = $true
+	}
+	$folder_title = $folderJsonFormat_Content.title
+	Write-Host -NoNewLine "Exporting folder: "
+	Write-Host "$folder_title" -ForegroundColor Yellow
+	
+	$folderJsonFormat_Content | ConvertTo-Json | Out-File "$scriptPath\exported_folders\$folder_title.json"
+}
+
+function saveDashboardJsonFile() {
+	Param(
+		[parameter(Mandatory=$true, Position=0)]
+		[Object []] $dash_Content
+    )
+	
+	
+	$dash_title = $dash_Content.dashboard.title
+	$dash_Content.dashboard.id = $null   # When importing always assign $null to the dashboard.id field
+	$dash_Content.dashboard.uid = $null  # When importing if setting dashboard.uid field to $null it will create a new dashboard. But will overwrite an existing dashboard otherwise
+	$dash_Content.dashboard.version = 1  # Reset dashboard version
+	$dash_Content.meta.version = 1
+	$dash_Content | Add-Member -Type NoteProperty -Name 'overwrite' -Value $true -Force  # Add {"overwrite" : true} property
+	Write-Host -NoNewLine "Exporting dashboard: "
+	Write-Host "$dash_title " -ForegroundColor Yellow
+	
+	$dash_Content | ConvertTo-Json -Depth $convertJsonDepth | Out-File "$scriptPath\exported_dashboards\$dash_title.json"
 }
 
 
@@ -60,22 +100,16 @@ function exportDashboardsAndFolders() {
 	foreach ($dash in $dashboards) {
 		try {
 			$dash_url = "${grafana_home_url}/api/dashboards/uid/$($dash.uid)"
-			
 			$dash_Content = grafanaApiCall "$grafana_home_url" "dashboards/uid/$($dash.uid)" "$api_key"
-
-			$dash_title = $dash_Content.dashboard.title
-			$dash_Content.dashboard.id = $null   # When importing always assign $null to the dashboard.id field
-			$dash_Content.dashboard.uid = $null  # When importing if setting dashboard.uid field to $null it will create a new dashboard. But will overwrite an existing dashboard otherwise
-			$dash_Content.dashboard.version = 1  # Reset dashboard version
-			$dash_Content.meta.version = 1
-			$dash_Content | Add-Member -Type NoteProperty -Name 'overwrite' -Value $true -Force
-
-			Write-Host -NoNewLine "Exporting: "
-			Write-Host "$dash_title " -ForegroundColor Yellow
-			if ($dash_Content.meta.isFolder) {$dash_Content | ConvertTo-Json | Out-File "$scriptPath\exported_folders\$dash_title.json"}
-			else {$dash_Content | ConvertTo-Json -Depth $convertJsonDepth | Out-File "$scriptPath\exported_dashboards\$dash_title.json"}
+			
+			if ($dash_Content.meta.isFolder) {
+				saveFolderJsonFile $dash_Content
+			} else {
+				saveDashboardJsonFile $dash_Content
+			}
 			
 			Write-Host "Success" -ForegroundColor Green
+			
 		} catch {
 			Write-Host $_
 			Write-Host "Failed to export $dash" -ForegroundColor Red
