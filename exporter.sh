@@ -17,7 +17,7 @@ for row in "${ORGS[@]}" ; do
     for dash in $(fetch_fields $KEY 'search?query=&' 'uri'); do
         DB=$(echo ${dash}|sed 's,db/,,g').json
         echo $DB
-        curl -f -k -H "Authorization: Bearer ${KEY}" "${HOST}/api/dashboards/${dash}" | jq 'del(.overwrite,.dashboard.version,.meta.created,.meta.createdBy,.meta.updated,.meta.updatedBy,.meta.expires,.meta.version)' > "$DIR/dashboards/$DB"
+        curl -f -k -H "Authorization: Bearer ${KEY}" "${HOST}/api/dashboards/${dash}" | jq '.dashboard.id = null | .dashboard.uid = null | .overwrite = true | del(.dashboard.version,.meta.created,.meta.createdBy,.meta.updated,.meta.updatedBy,.meta.expires,.meta.version)' > "$DIR/dashboards/$DB"
     done
 
     for id in $(fetch_fields $KEY 'datasources' 'id'); do
