@@ -5,8 +5,8 @@
 #   Grafana API Key: Settings -> API Keys (A viewer-key will suffice only for dashboards and folders. An admin-key will be required for datasources)
 
 
-$grafana_home_url = "http://ec2-3-16-187-253.us-east-2.compute.amazonaws.com:3000"
-$api_key = "eyJrIjoiOFhNUXVrdUcwMDRoOVpDcVdKMEduTWFnOGU5UEo5MGYiLCJuIjoiYWRtaW5fYXBpX2tleSIsImlkIjoxfQ=="
+$grafana_home_url = "http://localhost:3000"
+$api_key = "eyJrIjoicWhLR09QNDVkbnZzWDRGUURCTlRMM1ZvNlJNVnR2SzAiLCJuIjoid29ybGQiLCJpZCI6MX0="
 
 # Pattern to delete. ""=Delete all dashboards
 #  Deleting a folder will delete all dashboards inside that folder too. Cannot be undone
@@ -72,9 +72,11 @@ function deleteDashboards() {
 	$apiPath = "dashboards/uid"
 	Write-Host "Deleting dashboards that match patterns: $patternsToDelete"
 	foreach ($dash in $dashboardsAndFolders) {
-		if (-not ($dash.type -eq "dash-db")) {continue} # Not a dashboard - skip
+		if ($dash.type -ne "dash-db") {continue} # Not a dashboard - skip
 		
-		if (($patternsToDelete | %{"$($dash.title)".contains($_)}) -contains $true) { # If title contains pattern to delete
+		if (($patternsToDelete | %{"$($dash.title)".contains($_)}) -contains $true) { # If dashboard title contains pattern to delete
+			Write-Host -NoNewLine "Deleting dashboard: "
+			Write-Host "$($dash.title)" -ForegroundColor Yellow
 			grafanaApiCall "delete dashboard $($dash.title)" "$apiPath/$($dash.uid)" "DELETE"
 		}
 	}
@@ -103,9 +105,11 @@ function deleteFolders() {
 
 function main() {
 	Write-Host "Deleter Started"
-	$dashboardsAndFolders = getDashboardsAndFolders
-	deleteDashboards $dashboardsAndFolders
-	deleteFolders $dashboardsAndFolders
+	$dashboardsAndFolders = getDashboardsAndFolders | Select -Last 1
+	if ($dashboardsAndFolders) {
+		deleteDashboards $dashboardsAndFolders
+		deleteFolders $dashboardsAndFolders
+	}
 	Write-Host "`nDeleter Finished"
 	Read-Host
 }

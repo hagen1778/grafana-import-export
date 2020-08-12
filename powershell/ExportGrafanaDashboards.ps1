@@ -1,16 +1,24 @@
-﻿
-
+﻿# 
+# This script exports Grafana datasources, folders & dashboards.
+# 
 # Psrerequisites:
 #   Powershell v2 or higher
 #   Grafana API Key: Settings -> API Keys (A viewer-key will suffice only for dashboards and folders. An admin-key will be required for datasources)
-
+# 
 # If using powershell v2: $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 $scriptPath = $PSScriptRoot
 
-$grafana_home_url = "http://ec2-3-16-187-253.us-east-2.compute.amazonaws.com:3000"
-$api_key = "eyJrIjoiOFhNUXVrdUcwMDRoOVpDcVdKMEduTWFnOGU5UEo5MGYiLCJuIjoiYWRtaW5fYXBpX2tleSIsImlkIjoxfQ=="
+# Save export data to:
+$dashboardsDir = "$scriptPath\exported_dashboards"
+$datasourcesDir = "$scriptPath\exported_datasources"
+$foldersDir = "$scriptPath\exported_folders"
 
-# No need to touch
+
+$grafana_home_url = "http://localhost:3000"
+$api_key = "eyJrIjoicWhLR09QNDVkbnZzWDRGUURCTlRMM1ZvNlJNVnR2SzAiLCJuIjoid29ybGQiLCJpZCI6MX0="
+
+
+# No need to touch this
 $convertJsonDepth = 100
 
 function grafanaApiCall() {
@@ -36,10 +44,12 @@ function grafanaApiCall() {
 		return $resultData
 	} catch {
 		# Note that value__ is not a typo.
-		Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
+		$errorCode = $_.Exception.Response.StatusCode.value__ 
+		Write-Host "StatusCode:" $errorCode
 		Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
-		Read-Host "Exception Message:" $_.Exception.Message
-		
+		Write-Host "Exception Message:" $_.Exception.Message
+		if ($errorCode -eq 403) {Write-Warning "This might indicate that your API key is for viewer/editor only and not an Admin one"}
+		Read-Host "Press Enter to continue.."
 		exit 1
 	}
 }
@@ -54,14 +64,14 @@ function saveFolderJsonFile() {
 	$folderJsonFormat_Content =  @{
 		"title"= $dash_Content.dashboard.title
 		"uid" = $dash_Content.dashboard.uid
-		"id" = $null
+		"id" = $dash_Content.dashboard.id
 		"overwrite" = $true
 	}
 	$folder_title = $folderJsonFormat_Content.title
 	Write-Host -NoNewLine "Exporting folder: "
 	Write-Host "$folder_title" -ForegroundColor Yellow
 	
-	$folderJsonFormat_Content | ConvertTo-Json | Out-File "$scriptPath\exported_folders\$folder_title.json"
+	$folderJsonFormat_Content | ConvertTo-Json | Out-File "$foldersDir\$folder_title.json"
 }
 
 function saveDashboardJsonFile() {
@@ -72,15 +82,17 @@ function saveDashboardJsonFile() {
 	
 	
 	$dash_title = $dash_Content.dashboard.title
+	$folder_id = $dash_Content.meta.folderId
 	$dash_Content.dashboard.id = $null   # When importing always assign $null to the dashboard.id field
 	$dash_Content.dashboard.uid = $null  # When importing if setting dashboard.uid field to $null it will create a new dashboard. But will overwrite an existing dashboard otherwise
-	$dash_Content.dashboard.version = 1  # Reset dashboard version
-	$dash_Content.meta.version = 1
+	# $dash_Content.dashboard.version = 1  # Reset dashboard version
+	# $dash_Content.meta.version = 1
 	$dash_Content | Add-Member -Type NoteProperty -Name 'overwrite' -Value $true -Force  # Add {"overwrite" : true} property
+	$dash_Content | Add-Member -Type NoteProperty -Name 'folderId' -Value $folder_id -Force  # Add {"folderId" : $id} property
 	Write-Host -NoNewLine "Exporting dashboard: "
 	Write-Host "$dash_title " -ForegroundColor Yellow
 	
-	$dash_Content | ConvertTo-Json -Depth $convertJsonDepth | Out-File "$scriptPath\exported_dashboards\$dash_title.json"
+	$dash_Content | ConvertTo-Json -Depth $convertJsonDepth | Out-File "$dashboardsDir\$dash_title.json" -Force
 }
 
 
@@ -92,9 +104,9 @@ function exportDashboardsAndFolders() {
 	
 	Write-Host "Found $($dashboards.count) dashboards" -ForegroundColor Cyan
 
-	Write-Host "Creating dirs: exported_dashboards, exported_folders"
-	New-Item -ItemType Directory -Path "$scriptPath\exported_dashboards" -Force | Out-Null
-	New-Item -ItemType Directory -Path "$scriptPath\exported_folders" -Force | Out-Null
+	Write-Host "Exporting dashboards & folders to: `r`n - ${dashboardsDir} `r`n - ${foldersDir}"
+	New-Item -ItemType Directory -Path "$dashboardsDir" -Force | Out-Null
+	New-Item -ItemType Directory -Path "$foldersDir" -Force | Out-Null
 	Write-Host ""
 
 	foreach ($dash in $dashboards) {
@@ -126,8 +138,8 @@ function exportDatasources() {
 
 	Write-Host "Found $($datasources.count) datasources" -ForegroundColor Cyan
 
-	Write-Host "Creating dir exported_datasources"
-	New-Item -ItemType Directory -Path "$scriptPath\exported_datasources" -Force | Out-Null
+	Write-Host "Exporting datasources to: `r`n - ${datasourcesDir}"
+	New-Item -ItemType Directory -Path "$datasourcesDir" -Force | Out-Null
 	Write-Host ""
 	
 	foreach ($dataSrc in $datasources) {
@@ -139,9 +151,9 @@ function exportDatasources() {
 			$dataSrc_Name = $dataSrc_Content.name
 			$dataSrc_Content.id = $null   # When importing always assign $null to the datasource.id field
 			
-			Write-Host -NoNewLine "Exporting: "
+			Write-Host -NoNewLine "Exporting datasource: "
 			Write-Host "$dataSrc_Name " -ForegroundColor Yellow
-			$dataSrc_Content | ConvertTo-Json | Out-File "$scriptPath\exported_datasources\$dataSrc_Name.json"
+			$dataSrc_Content | ConvertTo-Json | Out-File "$datasourcesDir\$dataSrc_Name.json"
 			Write-Host "Success" -ForegroundColor Green
 		} catch {
 			Write-Host $_
