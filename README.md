@@ -13,6 +13,7 @@ Example was taken from https://gist.github.com/crisidev/bd52bdcc7f029be2f295
 Replace **HOST** and **FILE_DIR** variables at `config.sh` with your own.
 Also fill **ORGS** array with pairs ORGANIZATION:API_KEY.
 
+NOTE: export `datasources` need `admin` role, otherwise may got `403 {"message":"Permission denied"}` // tested grafana 7.1
 ## exporter
 Run:
 ```
