@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 . "$(dirname "$0")/config.sh"
 
+echoR(){ echo -e "\e[31m$@\e[0m"; }
+echoG(){ echo -e "\e[32m$@\e[0m"; }
+echoY(){ echo -e "\e[33m$@\e[0m"; }
+echoH(){ echo -e "\e[01;32;40m$@\e[0m"; }
+
+curl=`which curl`
+curl(){
+	local dst="${@: -1}"
+	echoG "===get $dst" >&2
+	$curl "$@"
+}
 fetch_fields() {
     curl -sSL -f -k -H "Authorization: Bearer ${1}" "${HOST}/api/${2}" | jq -r "if type==\"array\" then .[] else . end| .${3}"
 }
